@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>CV - {{ cv.Biographie.nom|default('') }} {{ cv.Biographie.prenom|default('') }}</title>
+    <style>
+        @page { margin: 1.5cm 1.2cm; }
+       body {
+            font-family: "Times New Roman", Times, serif;
+            font-size: 11pt;
+            line-height: 1.4;
+            color: #333;
+        }
+
+        h1 { font-size: 32pt; margin: 0;}
+        h2 {
+            font-size: 14pt;
+            border-bottom: 1px solid #ddd;
+            padding-bottom: 4px;
+            margin-bottom: 12px;
+            color: #1e40af;
+        }
+        .header {
+            display: flex;
+            gap: 25px;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+        .photo {
+            width: 110px;
+            height: 110px;
+            object-fit: cover;
+            border-radius: 50%;
+            border: 2px solid #ddd;
+        }
+        .section { margin-bottom: 10px; }
+        .tag {
+            display: inline-block;
+            padding: 4px 10px;
+            font-size: 10pt;
+            margin: 4px 6px 4px 0;
+        }
+        ul { margin: 8px 0; padding-left: 20px; }
+        .period { color: #666; font-size: 9.5pt; }
+    </style>
+</head>
+<body>
+
+   <div class="header" style="margin-bottom: 10px; padding-bottom: 20px; border-bottom: 1px solid #eee;">
+    <table style="width: 100%; border-collapse: collapse;">
+        <tr>
+            <!-- Colonne gauche : infos -->
+            <td style="width: 70%; vertical-align: top; padding-right: 25px;">
+                <h1 style="margin: 0 0 8px 0; font-size: 22pt;">{{ cv.Biographie.nom|default('') }} {{ cv.Biographie.prenom|default('') }}</h1>
+                <div style="font-size: 13pt; ">{{ cv.Biographie.email|default('') }}</div>
+                <div style="font-size: 13pt; ">{{ cv.Biographie.phone|default('') }}</div>
+                <div style="font-size: 13pt; ">{{ cv.Biographie.adresse|default('') }}</div>
+                {% if cv.Biographie.biographieSuites|default([])|length > 0 %}
+                    {% for item in cv.Biographie.biographieSuites %}
+                        {% set titre = item.titre|default('') %}
+                        {% set contenu = item.contenue|default('') %}
+
+                        {% if titre != '' or contenu != '' %}
+                            <div style="margin-bottom: 10px; font-size: 10pt; color: #4b5563;">
+                                {% if titre != '' %}<strong>{{ titre }} :</strong>{% endif %}
+                                {{ contenu }}
+                            </div>
+                        {% endif %}
+                    {% endfor %}
+                {% endif %}
+            </td>
+            
+            <!-- Colonne droite : photo -->
+            <td style="width: 30%; vertical-align: top; text-align: right;">
+                {% if cv.Photo and cv.Photo.pathRelative %}
+                    <div style="
+                        width: 140px;
+                        height: 140px;
+                        overflow: hidden;
+                        display: inline-block;
+                    ">
+                        <img 
+                            src="{{ api_url ~ cv.Photo.pathRelative }}" 
+                            alt="Photo"
+                            style="
+                                width: auto;
+                                height: 100%;
+                                display: block;
+                                margin: 0 auto;
+                            "
+                        >
+                    </div>
+                {% endif %}
+            </td>
+        </tr>
+    </table>
+</div>
+
+    {% macro section(title, content) %}
+        <div class="section">
+            <h2>{{ title }}</h2>
+            {{ content|raw }}
+        </div>
+    {% endmacro %}
+    <div>
+        <h1><strong>{{cv.Apropos.titre|default('')}}</strong></h1><br>
+        <div style="margin-top:1px;">{{cv.Apropos.description|default('Aucune description')|raw}}</div>
+    </div>
+    {{ _self.section('FORMATIONS', '') }}
+    {% for form in cv.Formation.FormationContenu|default([]) %}
+        <div style="margin-bottom:8px;">
+            <strong>{{ form.diplome|default('Diplôme non précisé') }}</strong><br>
+            {{ form.ecole|default('') }} – {{ form.lieu|default('') }}<br>
+            <span class="period">
+                {% if form.anneeDebut %}{{ form.anneeDebut|date('Y') }}{% endif %}
+                - {% if form.anneeFin %}{{ form.anneeFin|date('Y') }}{% else %}Présent{% endif %}
+            </span>
+        </div>
+    {% endfor %}
+
+    {{ _self.section('EXPERIENCES', '') }}
+    {% for exp in cv.Experience.ExperienceContenu|default([]) %}
+        <div style="margin-bottom:8px;">
+            <strong>{{ exp.titre|default('') }}</strong><br>
+            {{ exp.entreprise|default('') }}<br>
+            <span class="period">
+                {% if exp.anneeDebut %}
+                    {{ exp.anneeDebut|format_datetime('medium', 'none', locale='fr') }}
+                    {# → "janv. 2023" ou "1 janv. 2023" selon la version exacte #}
+                {% endif %}
+
+                {% if exp.anneeDebut and (exp.anneeFin or true) %} – {% endif %}
+
+                {% if exp.posteActuel == false %}
+                    {{ exp.anneeFin|format_datetime('medium', 'none', locale='fr') }}
+                {% else %}
+                    A présent
+                {% endif %}
+            </span><br>
+            <div style="margin-top:6px;">{{ exp.description|default('')|raw }}</div>
+        </div>
+    {% endfor %}
+
+    
+
+    {{ _self.section('COMPETENCES', '') }}
+    <div>
+        {% for comp in cv.Competence.competenceContenus|default([]) %}
+            <span class="tag">{{ comp.champ|default('') }} : {{ comp.contenue|default('') }}</span>
+        {% endfor %}
+    </div>
+
+    {{ _self.section('LANGUES', '') }}
+    <ul>
+        {% for lang in cv.Langue.LangueContenue|default([]) %}
+            <li>{{ lang.language|default('') }} - {{ lang.niveau|default('') }}</li>
+        {% endfor %}
+    </ul>
+
+    {{ _self.section('AUTRE ACTIVITES', '') }}
+    <ul>
+        {% for act in cv.AutreActivite.autreActiviteContenues|default([]) %}
+            <li><strong>{{ act.champ|default('') }} :</strong> {{ act.contenue|default('') }}</li>
+        {% endfor %}
+    </ul>
+
+</body>
+</html>

@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>CV - {{ cv.Biographie.nom|default('') }} {{ cv.Biographie.prenom|default('') }}</title>
+
+    <!-- Polices safe + Google Fonts (Dompdf supporte bien) -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+
+    <style>
+        @page { margin: 0cm 0cm; size: A4; }
+
+        body {
+            font-family: "Times New Roman", Times, serif;
+            font-size: 10.5pt;
+            line-height: 1.5;
+            color: #1f2937;
+            margin: 0;
+            background: #ffffff;
+        }
+
+        h1, h2, h3 {
+            margin: 0;
+            
+        }
+
+        h1 { font-size: 26pt; font-weight: 700; letter-spacing: -0.5px; }
+        h2 { font-size: 14pt; font-weight: 600; border-bottom: 2px solid #e5e7eb; padding-bottom: 6px; margin: 18px 0 10px; }
+        h3 { font-size: 12.5pt; margin-bottom: 4px; }
+
+        .container {
+            display: table;
+            width: 100%;
+            height: 100vh;
+            table-layout: fixed;
+        }
+
+        .sidebar {
+            display: table-cell;
+            width: 32%;
+            height: 95%;
+            vertical-align: top;
+            background: #f8fafc;
+            padding: 25px 20px;
+            border-right: 1px solid #e5e7eb;
+        }
+
+        .main {
+            display: table-cell;
+            width: 68%;
+            vertical-align: top;
+            padding: 25px 30px;
+        }
+
+        .photo {
+            width: 140px;
+            height: 140px;
+            object-fit: cover;
+            border-radius: 50%;
+            border: 4px solid #ffffff;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            display: block;
+            margin: 0 auto 18px;
+        }
+
+        .contact-item {
+            margin-bottom: 10px;
+            font-size: 10pt;
+        }
+
+        .tag {
+            display: inline-block;
+            background: #e0f2fe;
+            color: #1e40af;
+            padding: 4px 10px;
+            border-radius: 16px;
+            font-size: 9.5pt;
+            margin: 0 6px 8px 0;
+        }
+
+        .period {
+            color: #6b7280;
+            font-size: 9.5pt;
+            font-style: italic;
+        }
+
+        ul {
+            margin: 6px 0;
+            padding-left: 18px;
+        }
+
+        li {
+            margin-bottom: 4px;
+        }
+
+        .section-title {
+            text-transform: uppercase;
+            font-size: 11pt;
+            letter-spacing: 1px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+
+        {% if cv.Photo and cv.Photo.pathRelative %}
+            <div style="text-align: center; margin-bottom: 18px;">
+                <div style="
+                    width: 140px;
+                    height: 140px;
+                    border-radius: 50%;
+                    overflow: hidden;
+                    display: inline-block;
+                    border: 4px solid #ffffff;
+                    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+                ">
+                    <img 
+                        src="{{ api_url ~ cv.Photo.pathRelative }}" 
+                        alt="Photo profil" 
+                        style="
+                            width: auto;
+                            height: 100%;
+                            display: block;
+                            margin: 0 auto;
+                        "
+                    >
+                </div>
+            </div>
+        {% endif %}
+
+        <h2 style="text-align: center; margin-bottom: 6px; color: #111827;">
+            {{ cv.Biographie.nom|default('') }}<br>{{ cv.Biographie.prenom|default('') }}
+        </h2>
+
+        <!-- Infos contact -->
+        <div style="text-align: left; margin: 5px 0 5px; font-size: 10pt; color: #4b5563;">
+            {{ cv.Biographie.email|default('') }}<br>
+            {{ cv.Biographie.phone|default('') }}<br>
+            {{ cv.Biographie.adresse|default('') }}
+        </div>
+        <!-- Biographie suites ou autres sections si besoin -->
+        {% if cv.Biographie.biographieSuites|default([])|length > 0 %}
+            {% for item in cv.Biographie.biographieSuites %}
+                {% set titre = item.titre|default('') %}
+                {% set contenu = item.contenue|default('') %}
+
+                {% if titre != '' or contenu != '' %}
+                    <div style="margin-bottom: 10px; font-size: 10pt; color: #4b5563;">
+                        {% if titre != '' %}<strong>{{ titre }} :</strong>{% endif %}
+                        {{ contenu }}
+                    </div>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+
+
+        
+
+        <!-- Langues -->
+        {% if cv.Langue and cv.Langue.LangueContenue|default([])|length > 0 %}
+            <div class="section-title">LANGUES</div>
+            <ul style="list-style: none; padding: 0; margin: 0;">
+                {% for lang in cv.Langue.LangueContenue %}
+                    <li style="margin-bottom: 2px;">
+                        <strong>{{ lang.language|default('') }}</strong> – {{ lang.niveau|default('') }}
+                    </li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+
+        <!-- Compétences (tags) -->
+        {% if cv.Competence and cv.Competence.competenceContenus|default([])|length > 0 %}
+            <div style="margin-top: 8px;" class="section-title">COMPETENCES</div>
+            <div style="margin-top: 8px;">
+                {% for comp in cv.Competence.competenceContenus %}
+                    <span class="tag">{{ comp.champ|default('') }} : {{ comp.contenue|default('') }}</span>
+                {% endfor %}
+            </div>
+        {% endif %}
+
+        <!-- Autres activités -->
+        {% if cv.AutreActivite and cv.AutreActivite.autreActiviteContenues|default([])|length > 0 %}
+            <div class="section-title">AUTRES</div>
+            <ul>
+                {% for act in cv.AutreActivite.autreActiviteContenues %}
+                    <li><strong>{{ act.champ|default('') }}</strong> : {{ act.contenue|default('') }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+
+    </div>
+
+    <!-- CONTENU PRINCIPAL -->
+    <div class="main">
+
+        <!-- À propos rapide / slogan -->
+        {% if cv.Apropos and cv.Apropos.description %}
+            <div style="font-size: 10pt; text-align: justify;">
+                {{cv.Apropos.description|default('Aucune description')|raw}}
+            </div>
+        {% endif %}
+        <!-- FORMATIONS -->
+        {% if cv.Formation and cv.Formation.FormationContenu|default([])|length > 0 %}
+            <h2>FORMATIONS</h2>
+            {% for form in cv.Formation.FormationContenu %}
+                <div style="margin-bottom: 14px;">
+                    <h3>{{ form.diplome|default('Diplôme non précisé') }}</h3>
+                    <div>{{ form.ecole|default('') }} – {{ form.lieu|default('') }}</div>
+                    <span class="period">
+                        {% if form.anneeDebut %}{{ form.anneeDebut|date('Y') }}{% endif %}
+                        - {% if form.anneeFin %}{{ form.anneeFin|date('Y') }}{% else %}Présent{% endif %}
+                    </span>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <!-- EXPERIENCES -->
+        {% if cv.Experience and cv.Experience.ExperienceContenu|default([])|length > 0 %}
+            <h2>EXPERIENCES</h2>
+            {% for exp in cv.Experience.ExperienceContenu %}
+                <div style="margin-bottom: 16px;">
+                    <h3>{{ exp.titre|default('') }}</h3>
+                    <strong>{{ exp.entreprise|default('') }}</strong>
+                    <div class="period">
+                        {% if exp.anneeDebut %}
+                        {{ exp.anneeDebut|format_datetime('medium', 'none', locale='fr') }}
+                        {# → "janv. 2023" ou "1 janv. 2023" selon la version exacte #}
+                        {% endif %}
+
+                        {% if exp.anneeDebut and (exp.anneeFin or true) %} – {% endif %}
+
+
+                        {% if exp.posteActuel == false %}
+                            {{ exp.anneeFin|format_datetime('medium', 'none', locale='fr') }}
+                        {% else %}
+                            A présent
+                        {% endif %}
+                    </div>
+                    <div style="margin-top: 8px; font-size: 10pt;">{{ exp.description|default('')|raw }}</div>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+       
+
+    </div>
+
+</div>
+
+</body>
+</html>
